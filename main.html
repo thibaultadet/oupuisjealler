@@ -12,55 +12,102 @@
   </style>
 </head>
 <body>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.min.js"></script>
+  <link
+  rel="stylesheet"
+  href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.css"
+  type="text/css"
+  />
+  <!-- Promise polyfill script required to use Mapbox GL Geocoder in IE 11 -->
+  <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+
   <div id="map"></div>
 
   <script>
+    const center = [2.3522219, 48.856614];
+
     mapboxgl.accessToken = 'pk.eyJ1IjoidGhpYmF1bHRhZGV0IiwiYSI6ImNrNnc0OWxkcTAwamwzbXM2OHJ6NmRmbTQifQ.pnbyUlQE3c2YRnb0nevz7w';
     var map = new mapboxgl.Map({
       container: 'map', // container id
       style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
-      center: [2.3522219, 48.856614], // starting position [lng, lat]
-      zoom: 12 // starting zoom
+      center: center, // starting position [lng, lat]
+      zoom: 14 // starting zoom
     });
 
-    const metersToPixelsAtMaxZoom = () => 1000 / 0.075 / Math.cos(48.856614 * Math.PI / 180);
+    // map.scrollZoom.disable();
+
+    var marker = new mapboxgl.Marker() // initialize a new marker
+      .setLngLat(center) // Marker [lng, lat] coordinates
+      .addTo(map); // Add the marker to the map
+
+
+    var geocoder = new MapboxGeocoder({ // Initialize the geocoder
+      accessToken: mapboxgl.accessToken, // Set the access token
+      placeholder: "Entrez votre adresse",
+      mapboxgl: mapboxgl, // Set the mapbox-gl instance
+      marker: false, // Do not use the default marker style
+    });
+
+    map.addControl(geocoder);
+
+    var createGeoJSONCircle = function(center, radiusInKm, points) {
+        if(!points) points = 64;
+
+        var coords = {
+            latitude: center[1],
+            longitude: center[0]
+        };
+
+        var km = radiusInKm;
+
+        var ret = [];
+        var distanceX = km/(111.320*Math.cos(coords.latitude*Math.PI/180));
+        var distanceY = km/110.574;
+
+        var theta, x, y;
+        for(var i=0; i<points; i++) {
+            theta = (i/points)*(2*Math.PI);
+            x = distanceX*Math.cos(theta);
+            y = distanceY*Math.sin(theta);
+
+            ret.push([coords.longitude+x, coords.latitude+y]);
+        }
+        ret.push(ret[0]);
+
+        return {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [ret]
+                    }
+                }]
+            }
+        };
+    };
+
 
     const display = () => {
-      map.addSource("source_circle_500", {
-          "type": "geojson",
-          "data": {
-              "type": "FeatureCollection",
-              "features": [{
-                  "type": "Feature",
-                  "geometry": {
-                      "type": "Point",
-                      "coordinates": [2.3522219, 48.856614]
-                  }
-              }]
-          }
-      });
+      map.addSource("polygon", createGeoJSONCircle(center, 1));
 
       map.addLayer({
-          "id": "circle500",
-          "type": "circle",
-          "source": "source_circle_500",
-          "layout": {
-          },
+          "id": "polygon",
+          "type": "fill",
+          "source": "polygon",
+          "layout": {},
           "paint": {
-            "circle-radius": {
-              'stops': [
-                [0, 0],
-                [20, metersToPixelsAtMaxZoom]
-              ],
-              'base': 2
-            },
-            "circle-color": "#5b94c6",
-            "circle-opacity": 0.5
+              "fill-color": "blue",
+              "fill-opacity": 0.3
           }
       });
     };
 
     map.on('load', display);
+
   </script>
 </body>
 </html>

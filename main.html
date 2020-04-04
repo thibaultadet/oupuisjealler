@@ -8,7 +8,8 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.css" rel="stylesheet" />
   <style>
     body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%;}
+    .display-none { display: none;}
   </style>
 </head>
 <body>
@@ -21,52 +22,37 @@
   <!-- Promise polyfill script required to use Mapbox GL Geocoder in IE 11 -->
   <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+<!--   <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v0.10.1/mapbox-gl-language.js'></script> -->
 
-  <div id="map"></div>
+
+  <a href="#">Dis moi ou je peux aller !</a>
+  <input id="address" type="text" placeholder="J'entre mon adresse">
+  <button id="search">Cherchez</button>
+  <p id = "status"></p>
+  <div id="map" class="display-none"></div>
 
   <script>
-    const center = [2.3522219, 48.856614];
+    const mapDiv = document.getElementById('map');
+    const searchButton = document.getElementById('search');
+    const trigger = document.querySelector('a');
+    const status = document.querySelector('#status');
 
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGhpYmF1bHRhZGV0IiwiYSI6ImNrNnc0OWxkcTAwamwzbXM2OHJ6NmRmbTQifQ.pnbyUlQE3c2YRnb0nevz7w';
-    var map = new mapboxgl.Map({
-      container: 'map', // container id
-      style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
-      center: center, // starting position [lng, lat]
-      zoom: 14 // starting zoom
-    });
-
-    // map.scrollZoom.disable();
-
-    var marker = new mapboxgl.Marker() // initialize a new marker
-      .setLngLat(center) // Marker [lng, lat] coordinates
-      .addTo(map); // Add the marker to the map
-
-
-    var geocoder = new MapboxGeocoder({ // Initialize the geocoder
-      accessToken: mapboxgl.accessToken, // Set the access token
-      placeholder: "Entrez votre adresse",
-      mapboxgl: mapboxgl, // Set the mapbox-gl instance
-      marker: false, // Do not use the default marker style
-    });
-
-    map.addControl(geocoder);
-
-    var createGeoJSONCircle = function(center, radiusInKm, points) {
+    const createGeoJSONCircle = function(center, radiusInKm, points) {
         if(!points) points = 64;
 
-        var coords = {
+        const coords = {
             latitude: center[1],
             longitude: center[0]
         };
 
-        var km = radiusInKm;
+        const km = radiusInKm;
 
-        var ret = [];
-        var distanceX = km/(111.320*Math.cos(coords.latitude*Math.PI/180));
-        var distanceY = km/110.574;
+        const ret = [];
+        const distanceX = km/(111.320*Math.cos(coords.latitude*Math.PI/180));
+        const distanceY = km/110.574;
 
-        var theta, x, y;
-        for(var i=0; i<points; i++) {
+        let theta, x, y;
+        for(let i=0; i<points; i++) {
             theta = (i/points)*(2*Math.PI);
             x = distanceX*Math.cos(theta);
             y = distanceY*Math.sin(theta);
@@ -90,23 +76,89 @@
         };
     };
 
+    const display = (map, center) => {
+      map.on('load', () => {
+        map.addSource("polygon", createGeoJSONCircle(center, 1));
 
-    const display = () => {
-      map.addSource("polygon", createGeoJSONCircle(center, 1));
+        map.addLayer({
+            "id": "polygon",
+            "type": "fill",
+            "source": "polygon",
+            "layout": {},
+            "paint": {
+                "fill-color": "blue",
+                "fill-opacity": 0.3
+            }
+        });
+      })
 
-      map.addLayer({
-          "id": "polygon",
-          "type": "fill",
-          "source": "polygon",
-          "layout": {},
-          "paint": {
-              "fill-color": "blue",
-              "fill-opacity": 0.3
-          }
-      });
+      var marker = new mapboxgl.Marker() // initialize a new marker
+        .setLngLat(center) // Marker [lng, lat] coordinates
+        .addTo(map); // Add the marker to the map
+      console.log(map)
     };
 
-    map.on('load', display);
+
+    const initMap = (center) => {
+      // initialize map
+      mapboxgl.accessToken = 'pk.eyJ1IjoidGhpYmF1bHRhZGV0IiwiYSI6ImNrNnc0OWxkcTAwamwzbXM2OHJ6NmRmbTQifQ.pnbyUlQE3c2YRnb0nevz7w';
+      var map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+        center: center, // starting position [lng, lat]
+        zoom: 14 // starting zoom
+      });
+      // var language = new MapboxLanguage();
+      // map.addControl(language);
+      display(map, center);
+    };
+
+    const getPos = (position) => {
+      const centerLng = position.coords.longitude;
+      const centerLat = position.coords.latitude;
+      console.log(centerLng, centerLat);
+      return [centerLng, centerLat];
+    };
+
+    const geoFindMe = () => {
+      const options = { enableHighAccuracy: true };
+
+      const success = (position) => {
+        const center = getPos(position);
+        mapDiv.classList.remove('display-none'); // display map
+        initMap(center);
+      };
+
+      const error = (err) => {
+        console.log(err)
+        console.log(status)
+        status.innerText = "Nous avons besoin de connaître votre position pour pouvoir vous montrez ou vous pouvez aller pendant le confinement. Faites nous confiances, aucune donnée n'est sauvegardé.";
+      };
+
+      if (!navigator.geolocation) {
+        status.innerText = "La géolocalisation n'est pas supporté par votre navigateur";
+      } else {
+        status.innerText = 'Je vous cherche...';
+        navigator.geolocation.getCurrentPosition(success, error, options);
+      }
+    };
+
+
+
+    trigger.addEventListener('click', geoFindMe);
+    searchButton.addEventListener('click', () => {
+      const address = document.getElementById('address').value;
+      console.log(address);
+    })
+
+    // map.scrollZoom.disable();
+
+    // var geocoder = new MapboxGeocoder({ // Initialize the geocoder
+    //   accessToken: mapboxgl.accessToken, // Set the access token
+    //   placeholder: "Entrez votre adresse",
+    //   mapboxgl: mapboxgl, // Set the mapbox-gl instance
+    //   marker: false, // Do not use the default marker style
+    // });
 
   </script>
 </body>

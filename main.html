@@ -10,9 +10,22 @@
     body { margin: 0; padding: 0; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%;}
     .display-none { display: none;}
+    .info { text-align: center;
+    height: 100vh;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    flex-direction: column; }
   </style>
 </head>
 <body>
+
+  <div class="info">
+    <a href="#">Dis moi ou je peux aller !</a>
+    <p id = "status"></p>
+  </div>
+  <div id="map" class="display-none"></div>
+
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.min.js"></script>
   <link
   rel="stylesheet"
@@ -22,18 +35,12 @@
   <!-- Promise polyfill script required to use Mapbox GL Geocoder in IE 11 -->
   <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
-<!--   <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v0.10.1/mapbox-gl-language.js'></script> -->
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v0.10.1/mapbox-gl-language.js'></script>
 
 
-  <a href="#">Dis moi ou je peux aller !</a>
-  <input id="address" type="text" placeholder="J'entre mon adresse">
-  <button id="search">Cherchez</button>
-  <p id = "status"></p>
-  <div id="map" class="display-none"></div>
 
   <script>
     const mapDiv = document.getElementById('map');
-    const searchButton = document.getElementById('search');
     const trigger = document.querySelector('a');
     const status = document.querySelector('#status');
 
@@ -95,7 +102,6 @@
       var marker = new mapboxgl.Marker() // initialize a new marker
         .setLngLat(center) // Marker [lng, lat] coordinates
         .addTo(map); // Add the marker to the map
-      console.log(map)
     };
 
 
@@ -108,15 +114,14 @@
         center: center, // starting position [lng, lat]
         zoom: 14 // starting zoom
       });
-      // var language = new MapboxLanguage();
-      // map.addControl(language);
+      var language = new MapboxLanguage();
+      map.addControl(language);
       display(map, center);
     };
 
     const getPos = (position) => {
       const centerLng = position.coords.longitude;
       const centerLat = position.coords.latitude;
-      console.log(centerLng, centerLat);
       return [centerLng, centerLat];
     };
 
@@ -143,22 +148,9 @@
       }
     };
 
-
-
     trigger.addEventListener('click', geoFindMe);
-    searchButton.addEventListener('click', () => {
-      const address = document.getElementById('address').value;
-      console.log(address);
-    })
 
     // map.scrollZoom.disable();
-
-    // var geocoder = new MapboxGeocoder({ // Initialize the geocoder
-    //   accessToken: mapboxgl.accessToken, // Set the access token
-    //   placeholder: "Entrez votre adresse",
-    //   mapboxgl: mapboxgl, // Set the mapbox-gl instance
-    //   marker: false, // Do not use the default marker style
-    // });
 
   </script>
 </body>

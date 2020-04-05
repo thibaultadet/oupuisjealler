@@ -64,6 +64,8 @@ const display = (map, center) => {
 
 
 const initMap = (center) => {
+  const info = document.querySelector('.info');
+  info.style.display = 'none';
   // initialize map
   mapboxgl.accessToken = 'pk.eyJ1IjoidGhpYmF1bHRhZGV0IiwiYSI6ImNrNnc0OWxkcTAwamwzbXM2OHJ6NmRmbTQifQ.pnbyUlQE3c2YRnb0nevz7w';
   var map = new mapboxgl.Map({
@@ -96,12 +98,15 @@ const geoFindMe = (event) => {
   const error = (err) => {
     console.log(err)
     console.log(status)
+    status.classList.add('highlight');
     status.innerText = "Nous avons besoin de connaître votre position pour pouvoir vous montrez ou vous pouvez aller pendant le confinement. Faites nous confiances, aucune donnée n'est sauvegardé.";
   };
 
   if (!navigator.geolocation) {
+    status.classList.add('highlight');
     status.innerText = "La géolocalisation n'est pas supporté par votre navigateur... mes compétences s'arrêtent ici. Je suis désolé!\n Vous pouvez changer de navigateur ou prendre une carte papier, si ça existe encore... Courage !";
   } else {
+    status.classList.add('highlight');
     status.innerText = "Je vous cherche... Merci d'accepter la demande de géolocalisation";
     navigator.geolocation.getCurrentPosition(success, error, options);
   }

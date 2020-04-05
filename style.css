@@ -22,7 +22,7 @@ body {
   justify-content: center;
   flex-direction: column;
   width: 80vw;
-  height: 100vh;
+  /*height: 100vh;*/
   margin: 0 auto;
   font-size: 24px;
 }
@@ -44,4 +44,16 @@ body {
   background-color: #000839;
   padding: 25px;
   margin-top: 5px;
+}
+
+#mobile-only {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  #mobile-only {
+    display: block;
+    font-size: 16px;
+    color: red;
+  }
 }

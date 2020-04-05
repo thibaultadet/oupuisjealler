@@ -6,22 +6,46 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; font-family: 'Raleway', sans-serif; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%;}
     .display-none { display: none;}
-    .info { text-align: center;
+    .info {text-align: center;
     height: 100vh;
     align-items: center;
     display: flex;
     justify-content: center;
-    flex-direction: column; }
+    flex-direction: column;
+    width: 700px;
+    margin: 0 auto;
+    font-size: 30px;}
+    .btn {
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+      font-size: 40px;
+      background-color: #005082;
+      color: white;
+      text-decoration: none;
+      padding: 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin: 50px;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background-color: #000839;
+      padding: 25px;
+      margin: 45px;
+    }
   </style>
 </head>
 <body>
 
   <div class="info">
-    <a href="#">Dis moi ou je peux aller !</a>
+    <p>"J'en ai mare, je veux sortir de cette maison!"<br><br>
+    C'est ce que vous vous dites tous les jours? Mais comment savoir où est la limite de ce confinement. On vous a dit qu'il fallait pas aller à plus d'un kilomètre de votre domicile mais vous faites jamais plus de 300m à pied sans prendre le bus ou le métro d'habitude... <br><br>
+    Cliquez sur ce bouton et laissez moi faire !</p>
+    <a class="btn" href="#">Dis moi où je peux aller !</a>
     <p id = "status"></p>
   </div>
   <div id="map" class="display-none"></div>
@@ -125,7 +149,8 @@
       return [centerLng, centerLat];
     };
 
-    const geoFindMe = () => {
+    const geoFindMe = (event) => {
+      event.preventDefault();
       const options = { enableHighAccuracy: true };
 
       const success = (position) => {
@@ -141,9 +166,9 @@
       };
 
       if (!navigator.geolocation) {
-        status.innerText = "La géolocalisation n'est pas supporté par votre navigateur";
+        status.innerText = "La géolocalisation n'est pas supporté par votre navigateur... mes compétences s'arrêtent ici. Je suis désolé!\n Vous pouvez changer de navigateur ou prendre une carte papier, si ça existe encore... Courage !";
       } else {
-        status.innerText = 'Je vous cherche...';
+        status.innerText = "Je vous cherche... Merci d'accepter la demande de géolocalisation";
         navigator.geolocation.getCurrentPosition(success, error, options);
       }
     };
